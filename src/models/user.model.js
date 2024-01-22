@@ -52,10 +52,9 @@ const userSchema = new Schema(
     timestamps: true 
     }
 )
-
+//NOTE: never use arrow function in pre hook because arrow func do not have the context of this and has no reference 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next(); 
-
 
     this.password = bcrypt.hash(this.password, 10)
     next()
@@ -80,7 +79,7 @@ userSchema.methods.generateAccessToken = function(){
     )
 }
 userSchema.methods.generateRefreshToken = function(){
-     return Jwt.sign(
+    return Jwt.sign(
         {
             _id: this._id, 
         }, 
