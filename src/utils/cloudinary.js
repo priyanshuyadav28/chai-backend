@@ -1,6 +1,5 @@
-import {v2 as cloudinary} from "cloudinary"
-import fs from "fs"
-
+import { v2 as cloudinary } from "cloudinary";
+import fs from "fs";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -9,32 +8,27 @@ cloudinary.config({
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
-    try {   
-        if (!localFilePath) return null
+  try {
+    if (!localFilePath) return null;
 
-        // upload the file on cloudinary 
-        const response = await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-        })
+    // upload the file on cloudinary
+    const response = await cloudinary.uploader.upload(localFilePath, {
+      resource_type: "auto",
+    });
 
-        // file has been uploaded successfully 
-        console.log("File is Uploaded on Cloudinary !!", response.url);
+    // file has been uploaded successfully
+    // console.log("File is Uploaded on Cloudinary !!", response.url);
 
-        return response; 
+    fs.unlinkSync(localFilePath); // removes the file path from mongondb server since the file is successfully saved on cloudinary 
+    
+    // console.log("response: ",response);
 
-    } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved temperary file as the uplaod operation got failed 
+    return response;
 
-        return null; 
-    }
-}
-// temporary code to create the uploadOnCloudinary function
-// cloudinary.uploader.upload(
-//   "https://upload.wikimedia.org/wikipedia/commons/a/ae/Olympic_flag.jpg",
-//   { public_id: "olympic_flag" },
-//   function (error, result) {
-//     console.log(result);
-//   }
-// );
+  } catch (error) {
+    fs.unlinkSync(localFilePath); // remove the locally saved temperary file as the uplaod operation got failed
+    return null;
+  }
+};
 
-export {uploadOnCloudinary}
+export { uploadOnCloudinary };

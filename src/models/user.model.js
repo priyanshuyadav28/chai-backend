@@ -43,8 +43,7 @@ const userSchema = new Schema(
             required: [true, 'Password is Required']
         },
         refreshToken: {
-            type: String,
-            required: true,
+            type: String
         }
     
     },
@@ -55,7 +54,6 @@ const userSchema = new Schema(
 //NOTE: never use arrow function in pre hook because arrow func do not have the context of this and has no reference 
 userSchema.pre("save", async function (next) {
     if (!this.isModified("password")) return next(); 
-
     this.password = await bcrypt.hash(this.password, 10)
     next()
 })
@@ -78,6 +76,7 @@ userSchema.methods.generateAccessToken = function(){
         }
     )
 }
+
 userSchema.methods.generateRefreshToken = function(){
     return Jwt.sign(
         {
