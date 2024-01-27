@@ -5,7 +5,7 @@ const connectDB = async () => {
   // async because DB is in another continent
   try {
     const connectionInstance = await mongoose.connect(
-      `${process.env.MONGODB_URI}/${DB_NAME}`
+      `${process.env.MONGODB_URI}/${DB_NAME}` 
     );
     console.log(`\nMongoDB connected !! DB HOST: 
         ${connectionInstance.connection.host}`);

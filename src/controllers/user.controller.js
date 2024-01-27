@@ -136,7 +136,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({
     $or: [{ username }, { email }],
-  });
+  })
 
   if (!user) {
     throw new ApiError(404, "User does not exist");
@@ -186,8 +186,8 @@ const logoutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: 1, // this removes the field from document 
       },
     },
     {
