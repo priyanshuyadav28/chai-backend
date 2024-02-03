@@ -6,10 +6,8 @@ import jwt from "jsonwebtoken"
 export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
-
-        // console.log("\ntoken: ", token);
     
-        if (!token) {
+        if (!token) { 
             throw new ApiError(401, "Unauthorized request")
         }
     
@@ -23,12 +21,11 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         // console.log("\ndecoded token id: ", decodedToken._id);
 
         if(!user) {
-            // TODO: discuss about fronend
             throw new ApiError(401, "Invalid access Token")
         }
         // console.log("\nreq.user: ", user);
         
-        req.user = user; 
+        req.user = user; // adding new object to req as user which has the access of user created above  
 
         // console.log("\n user = ", user);
 

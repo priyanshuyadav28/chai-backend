@@ -14,9 +14,6 @@ const generateAccessAndRefreshTokens = async (userId) => {
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
 
-    console.log("accessToken: ", accessToken);
-    console.log("refreshToken: ", refreshToken);
-
     // insert refresh token in user object
     user.refreshToken = refreshToken;
     // save the refresh token in db model
@@ -44,6 +41,8 @@ const registerUser = asyncHandler(async (req, res) => {
   // return res
 
   const { fullName, email, username, password } = req.body;
+  // console.log("REQ",req)
+  // console.log("REQ.BODY",req.body)
 
   // if (fullName === "") {
   //     throw new ApiError(400, "fullname is required")
@@ -66,7 +65,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // check for avatar and cover image
   const avatarLocalPath = req.files?.avatar[0]?.path;
-  // console.log("req.files",req.files);
+
+  console.log("req.files",req.files)
+  console.log("req.files?.avatar[0]: ", req.files?.avatar[0])
 
   // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -102,6 +103,8 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     username: username.toLowerCase(),
   });
+
+  
 
   // remove password and refreshtoken
   const createdUser = await User.findById(user._id).select(
@@ -183,6 +186,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // logout user
 const logoutUser = asyncHandler(async (req, res) => {
+
   await User.findByIdAndUpdate(
     req.user._id,
     {
@@ -258,6 +262,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 // change user password
 const changeCurrentPassword = asyncHandler(async (req, res) => {
+
   const { oldPassword, newPassword } = req.body;
 
   const user = User.findById(req.user._id);
@@ -302,7 +307,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         email,
       },
     },
-    { new: true }
+    { new: true } // the information is returned after updating
   ).select("-password");
 
   return res
@@ -312,6 +317,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 // avatar file update
 const updateUserAvatar = asyncHandler(async (req, res) => {
+
   const newAvatarLocalPath = req.file?.path;
 
   if (!newAvatarLocalPath) {
@@ -324,8 +330,9 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading on avatar");
   }
 
+  // saving the avatar in database 
   const user = await User.findByIdAndUpdate(
-    req.user._id,
+    req.user?._id,
     {
       $set: {
         avatar: avatar.url,
@@ -368,9 +375,18 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Cover Image updated successfully"));
 });
 
+
 // user channel profile info
+// AGGREGATION PIPELINE
 const getUserChannelProfile = asyncHandler(async (req, res) => {
+
   const { username } = req.params;
+  console.log("req.params: ", req.params);
+  
+  // console.log("getUserChannelProfile/username", username);
+  // console.log("\n req.params: ", req.params);
+  // console.log("\n req.body ", req.body);
+
 
   if (!username?.trim()) {
     throw new ApiError(400, "User name is Missing");
@@ -383,9 +399,9 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
       },
     },
     {
-      // subscribers data -> how many people have subscribed to you 
+      // subscribers data -> how many people have subscribed to you
       $lookup: {
-        from: "subscriptions", // all models in db are in lowercase and at last 's' is added by defautl in mongodb
+        from: "subscriptions", // all models in db are in lowercase and at last 's' is added by default in mongodb
         localField: "_id",
         foreignField: "channel",
         as: "subscribers",
@@ -408,12 +424,12 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
         channelsSubscribedToCount: {
           $size: "$subscribedTo",
         },
-      },
-      isSubscribed: {
-        $cond: {
-          if: { $in: [req.user?._id, "$subscribers.subscriber"] },
-          then: true,
-          else: false,
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
         },
       },
     },

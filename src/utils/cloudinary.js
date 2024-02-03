@@ -16,12 +16,14 @@ const uploadOnCloudinary = async (localFilePath) => {
       resource_type: "auto",
     });
 
+    // console.log("\nresponse: ", response);
+
     // file has been uploaded successfully
     // console.log("File is Uploaded on Cloudinary !!", response.url);
 
     fs.unlinkSync(localFilePath); // removes the file path from mongondb server since the file is successfully saved on cloudinary 
     
-    // console.log("response: ",response);
+    
 
     return response;
 
