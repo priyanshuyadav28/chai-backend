@@ -40,7 +40,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid UserId");
   }
 
-  const playlist = await Playlist.aggregate([
+  const playlists = await Playlist.aggregate([
     {
       $match: {
         _id: new mongoose.Types.ObjectId(userId),
@@ -78,4 +78,7 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   .json(new ApiResponse(200, playlists, "Playlist fetched successfully"))
 });
 
-export { createPlaylist };
+export { 
+  createPlaylist, 
+  getUserPlaylists
+};
