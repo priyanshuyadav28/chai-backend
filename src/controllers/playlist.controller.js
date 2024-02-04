@@ -33,6 +33,75 @@ const createPlaylist = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, playlist, "Playlist created successfully"));
 });
 
+const updatePlaylist = asyncHandler(async (req, res) => {
+  const { name, description } = req.body;
+  const { playlistId } = req.params;
+
+  if (!(name || description)) {
+    throw new ApiError(404, "Name and Description are required");
+  }
+
+  if (!isValidObjectId(playlistId)) {
+    throw new ApiError(404, "Playlist Id Invalid");
+  }
+
+  const playlist = await Playlist.findById(playlistId);
+
+  if (!playlist) {
+    throw new ApiError(404, "Playlist not found");
+  }
+
+  if (playlist.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(400, "only owner can edit the playlist");
+  }
+
+  const updatedPlaylist = await Playlist.findByIdAndUpdate(
+    playlist?._id,
+    {
+      $set: {
+        name,
+        description,
+      },
+    },
+    { new: true }
+  );
+
+  if (!updatePlaylist) {
+    throw new ApiError(500, "Unablet to update plalist ");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, updatedPlaylist, "Playlist Updated Successfully")
+    );
+});
+
+const deletePlaylist = asyncHandler(async (req, res) => {
+  const { playlistId } = req.params;
+
+  if (!playlistId) {
+    throw new ApiError(404, "Invalid playlist id")
+  }
+
+  const playlist = await Playlist.findById(playlistId)
+
+  if (!playlist) {
+    throw new ApiError(404, "Playlist Not found")
+  }
+
+  if (playlist.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(400, "only owner can delete the playlist");
+  }
+
+  await findByIdAndDelete(playlist?._id)
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, "Playlist Deleted Successfully"))
+
+});
+
 const getUserPlaylists = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
@@ -74,11 +143,8 @@ const getUserPlaylists = asyncHandler(async (req, res) => {
   ]);
 
   return res
-  .status(200)
-  .json(new ApiResponse(200, playlists, "Playlist fetched successfully"))
+    .status(200)
+    .json(new ApiResponse(200, playlists, "Playlist fetched successfully"));
 });
 
-export { 
-  createPlaylist, 
-  getUserPlaylists
-};
+export { createPlaylist, updatePlaylist, deletePlaylist, getUserPlaylists };
