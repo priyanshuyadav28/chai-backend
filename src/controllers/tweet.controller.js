@@ -1,4 +1,4 @@
-import mongoose, {isValidObjectId} from "mongoose";
+import mongoose, {Types, isValidObjectId} from "mongoose";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { ApiError } from "../utils/apiError.js";
@@ -25,8 +25,9 @@ const createTweet = asyncHandler(async(req, res) => {
     if (!content) {
         throw new ApiError(401, "content cant be empty!");
     }
-    console.log("req.body from createTweet: ", req.body);
-    console.log("req.body.user: ",req.body.user);
+    // console.log("req.body from createTweet: ", req.body);
+    // console.log("req.body.user: ",req.body.user);
+
     // else if content is present save it in db 
     const tweet = await Tweet.create({
         content, 
@@ -93,11 +94,56 @@ const updateTweet = asyncHandler(async (req, res) => {
 
 })
 
+const deleteTweet = asyncHandler( async (req, res) => {
+    const {tweetId} = req.params
+
+    if (!tweetId) {
+        throw new ApiError(500, "No Tweet Found")
+    }
+
+    const tweet = await Tweet.findById(tweetId)
+
+     if (!tweet) {
+        throw new ApiError(500, "Tweet does not exist")
+    }
+
+    await Tweet.findByIdAndDelete(tweet)
+
+    return res
+    .status(200)
+    .json(200, "Tweet Deleted Successfully")
+})
+
 const getUserTweets = asyncHandler(async (req, res) => {
-  // TODO: get user tweets
+    // TODO: get user tweets
+
+    const userTweets = Tweet.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(req.user._id),
+            }
+        }, 
+        {
+            $lookup: {
+                from: "users", 
+                localfield: "owner",
+                foreignfield: "_id", 
+                as: "ownerDetails", 
+            }, 
+            pipeline: [
+                {
+                    $project: {
+                        fullName: 1, 
+                        username: 1, 
+                        avatar: 1
+                    }
+                }
+            ]
+        }
+    ])
     
 });
 
 
 
-export { createTweet, updateTweet };
+export { createTweet, updateTweet, deleteTweet, getUserTweets };

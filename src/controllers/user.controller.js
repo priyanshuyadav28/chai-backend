@@ -66,8 +66,8 @@ const registerUser = asyncHandler(async (req, res) => {
   // check for avatar and cover image
   const avatarLocalPath = req.files?.avatar[0]?.path;
 
-  console.log("req.files",req.files)
-  console.log("req.files?.avatar[0]: ", req.files?.avatar[0])
+  console.log("req.files", req.files);
+  console.log("req.files?.avatar[0]: ", req.files?.avatar[0]);
 
   // const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
@@ -104,8 +104,6 @@ const registerUser = asyncHandler(async (req, res) => {
     username: username.toLowerCase(),
   });
 
-  
-
   // remove password and refreshtoken
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -139,7 +137,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({
     $or: [{ username }, { email }],
-  })
+  });
 
   if (!user) {
     throw new ApiError(404, "User does not exist");
@@ -186,12 +184,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // logout user
 const logoutUser = asyncHandler(async (req, res) => {
-
   await User.findByIdAndUpdate(
     req.user._id,
     {
       $unset: {
-        refreshToken: 1, // this removes the field from document 
+        refreshToken: 1, // this removes the field from document
       },
     },
     {
@@ -262,7 +259,6 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 // change user password
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-
   const { oldPassword, newPassword } = req.body;
 
   const user = User.findById(req.user._id);
@@ -317,7 +313,6 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 // avatar file update
 const updateUserAvatar = asyncHandler(async (req, res) => {
-
   const newAvatarLocalPath = req.file?.path;
 
   if (!newAvatarLocalPath) {
@@ -330,7 +325,7 @@ const updateUserAvatar = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Error while uploading on avatar");
   }
 
-  // saving the avatar in database 
+  // saving the avatar in database
   const user = await User.findByIdAndUpdate(
     req.user?._id,
     {
@@ -375,18 +370,15 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, user, "Cover Image updated successfully"));
 });
 
-
 // user channel profile info
 // AGGREGATION PIPELINE
 const getUserChannelProfile = asyncHandler(async (req, res) => {
-
   const { username } = req.params;
   console.log("req.params: ", req.params);
-  
+
   // console.log("getUserChannelProfile/username", username);
   // console.log("\n req.params: ", req.params);
   // console.log("\n req.body ", req.body);
-
 
   if (!username?.trim()) {
     throw new ApiError(400, "User name is Missing");
@@ -447,7 +439,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     },
   ]);
 
-  console.log("\n\nchannel: ", channel);
+  console.log("\n\n CHANNEL: ", channel);
 
   if (!channel?.length) {
     throw new ApiError(404, "channel does not exist.");
@@ -460,6 +452,8 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
+// pipeline 2
+
 const getWatchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
@@ -471,55 +465,49 @@ const getWatchHistory = asyncHandler(async (req, res) => {
       $lookup: {
         from: "videos", // Video model
         localField: "watchHistory",
-        foreignField: "_id", 
-        as: "watchHistory", 
+        foreignField: "_id",
+        as: "watchHistory",
         pipeline: [
           {
             $lookup: {
-              from: "users", 
+              from: "users",
               localField: "owner",
-              foreignField: "_id", 
+              foreignField: "_id",
               as: "owner",
               pipeline: [
                 {
                   $project: {
                     fullName: 1,
                     username: 1,
-                    avatar: 1
-                  }
-                }
-              ]
-            }
-          }, 
+                    avatar: 1,
+                  },
+                },
+              ],
+            },
+          },
           {
             $addFields: {
               owner: {
-                $first: "$owner"
-              }
-            }
-          }
-        ]
+                // overwriting existing field
+                $first: "$owner",
+              },
+            },
+          },
+        ],
       },
     },
-
-    
-
-
-  ])
+  ]);
 
   return res
-  .status(200)
-  .json(
-    new ApiResponse(
-      200, 
-      user[0].watchHistory, 
-      "Watch History Fetched Successfully"
-    )
-  )
-
-})
-
-
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch History Fetched Successfully"
+      )
+    );
+});
 
 export {
   registerUser,
